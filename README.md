@@ -1,5 +1,4 @@
-# documentdb-repo
-Repository pattern with DocumentDB
+Simple repository pattern with DocumentDB
 
 # Getting started
 
