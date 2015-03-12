@@ -35,7 +35,7 @@ internal class Program
 
 ## Step 2: Use the repo with your POCO objects
 
-With the repository in place it's really simple:
+With the repository in place it's really simple to do the CRUD operations:
 
 ```csharp
 private static async Task MainAsync(string[] args)
