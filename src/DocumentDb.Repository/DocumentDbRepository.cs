@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace DocumentDB.Repository
 {
-    public class BaseDocumentDbRepository<T> where T : class
+    public class DocumentDbRepository<T> where T : class
     {
         private DocumentClient _client;
         private string _databaseId;
@@ -24,7 +24,7 @@ namespace DocumentDB.Repository
         private readonly string _collectionName;
         private readonly string _idFieldName;
 
-        public BaseDocumentDbRepository(DocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Func<string> idNameFactory = null)
+        public DocumentDbRepository(DocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Func<string> idNameFactory = null)
         {
             _client = client;
             _databaseId = databaseId;
@@ -74,11 +74,7 @@ namespace DocumentDB.Repository
 
             if (doc != null)
             {
-                var existingEntity  = JsonConvert.DeserializeObject<T>(doc.ToString());
-
-                entity.CopyProperties(existingEntity);
-
-                var updatedDoc = await _client.ReplaceDocumentAsync(doc.SelfLink, existingEntity);
+                var updatedDoc = await _client.ReplaceDocumentAsync(doc.SelfLink, entity);
                 upsertedEntity = JsonConvert.DeserializeObject<T>(updatedDoc.Resource.ToString());
             }
             else
@@ -103,14 +99,28 @@ namespace DocumentDB.Repository
 
         public async Task<T> GetByIdAsync(string id)
         {
-            var doc = await GetDocumentByIdAsync(id);
+            return await FirstOrDefaultAsync(d => GetId(d) == id);
+        }
 
-            return JsonConvert.DeserializeObject<T>(doc.ToString());
+        public async Task<T> FirstOrDefaultAsync(Func<T,bool> predicate)
+        {
+            return
+                _client.CreateDocumentQuery<T>((await _collection).DocumentsLink)
+                    .Where(predicate)
+                    .AsEnumerable()
+                    .FirstOrDefault();
+        }
+
+        public async Task<IEnumerable<T>> WhereAsync(Func<T, bool> predicate)
+        {
+            return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink)
+                .Where(predicate)
+                .AsEnumerable();
         }
 
         private async Task<Document> GetDocumentByIdAsync(string id)
         {
-            return _client.CreateDocumentQuery<Document>((await _collection).SelfLink).AsEnumerable().Where(d => d.Id == id).FirstOrDefault();
+            return _client.CreateDocumentQuery<Document>((await _collection).SelfLink).Where(d => d.Id == id).AsEnumerable().FirstOrDefault();
         }
 
         private async Task<DocumentCollection> GetOrCreateCollectionAsync()

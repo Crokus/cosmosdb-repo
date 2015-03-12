@@ -46,7 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncLazy.cs" />
-    <Compile Include="BaseDocumentDbRepository.cs" />
+    <Compile Include="DocumentDbRepository.cs" />
     <Compile Include="DocumentDbInitializer.cs" />
     <Compile Include="IDocumentDbInitializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

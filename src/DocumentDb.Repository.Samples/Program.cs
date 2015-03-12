@@ -12,7 +12,7 @@ namespace DocumentDb.Repository.Samples
 {
     internal class Program
     {
-        public static BaseDocumentDbRepository<Person> Repo { get; set; }
+        public static DocumentDbRepository<Person> Repo { get; set; }
 
         private static void Main(string[] args)
         {
@@ -26,7 +26,7 @@ namespace DocumentDb.Repository.Samples
             DocumentClient client = init.GetClient(endpointUrl, authorizationKey);
 
             // create repository for persons
-            Repo = new BaseDocumentDbRepository<Person>(client, database);
+            Repo = new DocumentDbRepository<Person>(client, database);
 
             // Run demo
             Task t = MainAsync(args);
@@ -52,8 +52,20 @@ namespace DocumentDb.Repository.Samples
                     }
             };
 
-            // add person to database (collection named as class name will be created by convenction, this can be configured during initialization of the repository)
+            // add person to database's collection (if collection doesn't exist it will be created and named as class name -it's a convenction, that can be configured during initialization of the repository)
             matt = await Repo.AddOrUpdateAsync(matt);
+
+            // create another person
+            Person jack = new Person
+            {
+                FirstName = "Jack",
+                LastName = "Smith",
+                BirthDayDateTime = new DateTime(1990, 10, 10),
+                PhoneNumbers = new Collection<PhoneNumber>()
+            };
+
+            // add jack to collection
+            jack = await Repo.AddOrUpdateAsync(jack);
 
             // should output person and his two phone numbers
             await PrintPersonCollection();
@@ -77,8 +89,19 @@ namespace DocumentDb.Repository.Samples
             Person justMatt = await Repo.GetByIdAsync(matt.Id);
             Console.WriteLine("GetByIdAsync result: " + justMatt);
 
+            // ... or by his first name
+            Person firstMatt = await Repo.FirstOrDefaultAsync(p => p.FirstName.Equals("matt", StringComparison.OrdinalIgnoreCase));
+            Console.WriteLine("First: " + firstMatt);
+
+            // query all the smiths
+            var smiths = (await Repo.WhereAsync(p => p.LastName.Equals("Smith", StringComparison.OrdinalIgnoreCase))).ToList();
+            Console.WriteLine(smiths.Count);
+
             // remove matt from collection
             await Repo.RemoveAsync(matt.Id);
+
+            // remove jack from collection
+            await Repo.RemoveAsync(jack.Id);
 
             // should output nothing
             await PrintPersonCollection();
