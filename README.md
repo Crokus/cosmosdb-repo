@@ -76,5 +76,3 @@ private static async Task MainAsync(string[] args)
     // remove matt from collection
     await Repo.RemoveAsync(matt.Id);
 }
-
-You can find full example [here](src/DocumentDb.Repository.Samples/Program.cs)
