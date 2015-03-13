@@ -4,7 +4,7 @@ Simple repository pattern with DocumentDB
 
 ## Step 1: Get DocumentDB client and create Repository
 
-Before you can play with your DocumentDB database you need to get the DocumentDB Client by passing your endopointUrl, authorizationKey (primary) and your database name (will be created if it doesn't exist).
+Before you can play with your DocumentDB database you need to get the DocumentDB Client by passing your endopointUrl, authorizationKey (primary).
 
 ```csharp
 internal class Program
@@ -30,7 +30,8 @@ internal class Program
 
 ## Step 2: Use the repo with your POCO objects
 
-With the repository in place it's really simple to do the CRUD operations:
+With the client in place create a repository providing database id (will be created if it doesn't exist). 
+Now it's really easy to do the CRUD operations:
 
 ```csharp
 private static async Task MainAsync(string[] args)
