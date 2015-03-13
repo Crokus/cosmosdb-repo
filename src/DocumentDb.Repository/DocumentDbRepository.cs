@@ -15,8 +15,8 @@ namespace DocumentDB.Repository
 {
     public class DocumentDbRepository<T> where T : class
     {
-        private DocumentClient _client;
-        private string _databaseId;
+        private readonly DocumentClient _client;
+        private readonly string _databaseId;
 
         private readonly AsyncLazy<Database> _database;
         private AsyncLazy<DocumentCollection> _collection;
@@ -51,12 +51,8 @@ namespace DocumentDB.Repository
         {
             bool isSuccess = false;
 
-            var doc =
-                _client.CreateDocumentQuery<Document>((await _collection).SelfLink)
-                    .AsEnumerable()
-                    .Where(d => d.Id == id)
-                    .FirstOrDefault();
-
+            var doc = await GetDocumentByIdAsync(id);
+            
             if (doc != null)
             {
                 var result = await _client.DeleteDocumentAsync(doc.SelfLink);

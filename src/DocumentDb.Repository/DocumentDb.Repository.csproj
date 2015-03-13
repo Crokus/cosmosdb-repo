@@ -50,7 +50,6 @@
     <Compile Include="DocumentDbInitializer.cs" />
     <Compile Include="IDocumentDbInitializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PropertyCopier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

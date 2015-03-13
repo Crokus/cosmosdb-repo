@@ -12,7 +12,7 @@ namespace DocumentDb.Repository.Samples
 {
     internal class Program
     {
-        public static DocumentDbRepository<Person> Repo { get; set; }
+        public static DocumentClient Client { get; set; }
 
         private static void Main(string[] args)
         {
@@ -20,13 +20,9 @@ namespace DocumentDb.Repository.Samples
 
             string endpointUrl = ConfigurationManager.AppSettings["azure.documentdb.endpointUrl"];
             string authorizationKey = ConfigurationManager.AppSettings["azure.documentdb.authorizationKey"];
-            string database = ConfigurationManager.AppSettings["azure.documentdb.databaseName"];
 
             // get the Azure DocumentDB client
-            DocumentClient client = init.GetClient(endpointUrl, authorizationKey);
-
-            // create repository for persons
-            Repo = new DocumentDbRepository<Person>(client, database);
+            Client = init.GetClient(endpointUrl, authorizationKey);
 
             // Run demo
             Task t = MainAsync(args);
@@ -35,8 +31,13 @@ namespace DocumentDb.Repository.Samples
 
         private static async Task MainAsync(string[] args)
         {
-            // output all persons in our database
-            await PrintPersonCollection();
+            string databaseId = ConfigurationManager.AppSettings["azure.documentdb.databaseId"];
+
+            // create repository for persons
+            DocumentDbRepository<Person> repo = new DocumentDbRepository<Person>(Client, databaseId);
+
+            // output all persons in our database, nothing there yet
+            await PrintPersonCollection(repo);
 
             // create a new person
             Person matt = new Person
@@ -53,7 +54,7 @@ namespace DocumentDb.Repository.Samples
             };
 
             // add person to database's collection (if collection doesn't exist it will be created and named as class name -it's a convenction, that can be configured during initialization of the repository)
-            matt = await Repo.AddOrUpdateAsync(matt);
+            matt = await repo.AddOrUpdateAsync(matt);
 
             // create another person
             Person jack = new Person
@@ -65,10 +66,10 @@ namespace DocumentDb.Repository.Samples
             };
 
             // add jack to collection
-            jack = await Repo.AddOrUpdateAsync(jack);
+            jack = await repo.AddOrUpdateAsync(jack);
 
             // should output person and his two phone numbers
-            await PrintPersonCollection();
+            await PrintPersonCollection(repo);
 
             // update first name
             matt.FirstName = "Matt";
@@ -80,36 +81,36 @@ namespace DocumentDb.Repository.Samples
             matt.PhoneNumbers.RemoveAt(1);
 
             // should update person
-            await Repo.AddOrUpdateAsync(matt);
+            await repo.AddOrUpdateAsync(matt);
 
             // should output Matt with just one phone number
-            await PrintPersonCollection();
+            await PrintPersonCollection(repo);
 
             // get Matt by his Id
-            Person justMatt = await Repo.GetByIdAsync(matt.Id);
+            Person justMatt = await repo.GetByIdAsync(matt.Id);
             Console.WriteLine("GetByIdAsync result: " + justMatt);
 
             // ... or by his first name
-            Person firstMatt = await Repo.FirstOrDefaultAsync(p => p.FirstName.Equals("matt", StringComparison.OrdinalIgnoreCase));
+            Person firstMatt = await repo.FirstOrDefaultAsync(p => p.FirstName.Equals("matt", StringComparison.OrdinalIgnoreCase));
             Console.WriteLine("First: " + firstMatt);
 
             // query all the smiths
-            var smiths = (await Repo.WhereAsync(p => p.LastName.Equals("Smith", StringComparison.OrdinalIgnoreCase))).ToList();
+            var smiths = (await repo.WhereAsync(p => p.LastName.Equals("Smith", StringComparison.OrdinalIgnoreCase))).ToList();
             Console.WriteLine(smiths.Count);
 
             // remove matt from collection
-            await Repo.RemoveAsync(matt.Id);
+            await repo.RemoveAsync(matt.Id);
 
             // remove jack from collection
-            await Repo.RemoveAsync(jack.Id);
+            await repo.RemoveAsync(jack.Id);
 
             // should output nothing
-            await PrintPersonCollection();
+            await PrintPersonCollection(repo);
         }
 
-        private static async Task PrintPersonCollection()
+        private static async Task PrintPersonCollection(DocumentDbRepository<Person> repo)
         {
-            IEnumerable<Person> persons = await Repo.GetAllAsync();
+            IEnumerable<Person> persons = await repo.GetAllAsync();
 
             persons.ToList().ForEach(Console.WriteLine);
         }
