@@ -95,8 +95,16 @@ namespace DocumentDb.Repository.Samples
             Console.WriteLine("First: " + firstMatt);
 
             // query all the smiths
-            var smiths = (await repo.WhereAsync(p => p.LastName.Equals("Smith", StringComparison.OrdinalIgnoreCase))).ToList();
+            var smiths = (await repo.WhereAsync(p => p.LastName.Equals("Smith"))).ToList();
             Console.WriteLine(smiths.Count);
+
+            // use IQueryable, as for now supported expressions are 'Queryable.Where', 'Queryable.Select' & 'Queryable.SelectMany'
+            var allSmithsPhones = (await repo.QueryAsync()).SelectMany(p => p.PhoneNumbers).Select(p => p.Type);
+
+            foreach (var phone in allSmithsPhones)
+            {
+                Console.WriteLine(phone);
+            }
 
             // remove matt from collection
             await repo.RemoveAsync(matt.Id);

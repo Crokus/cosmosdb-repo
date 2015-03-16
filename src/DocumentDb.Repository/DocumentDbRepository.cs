@@ -83,9 +83,9 @@ namespace DocumentDB.Repository
             return upsertedEntity;
         }
 
-        public async Task<long> CountAsync()
+        public async Task<int> CountAsync()
         {
-            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).AsEnumerable().LongCount();
+            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).AsEnumerable().Count();
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
@@ -107,11 +107,14 @@ namespace DocumentDB.Repository
                     .FirstOrDefault();
         }
 
-        public async Task<IEnumerable<T>> WhereAsync(Func<T, bool> predicate)
+        public async Task<IQueryable<T>> WhereAsync(Expression<Func<T, bool>> predicate)
         {
-            return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink)
-                .Where(predicate)
-                .AsEnumerable();
+            return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink).Where(predicate);
+        }
+
+        public async Task<IQueryable<T>> QueryAsync()
+        {
+            return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink);
         }
 
         private async Task<Document> GetDocumentByIdAsync(string id)
