@@ -97,3 +97,6 @@ private static async Task MainAsync(string[] args)
 	// remove jack from collection
 	await repo.RemoveAsync(jack.Id);
 }
+```
+
+Full example can be found [here](https://github.com/Crokus/documentdb-repo/blob/master/src/DocumentDb.Repository.Samples/Program.cs).
