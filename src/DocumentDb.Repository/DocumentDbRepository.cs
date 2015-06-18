@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using DocumentDb.Repository;
+using DocumentDb.Repository.Infrastructure;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
@@ -24,7 +27,9 @@ namespace DocumentDB.Repository
         private readonly string _collectionName;
         private readonly string _idFieldName;
 
-        public DocumentDbRepository(DocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Func<string> idNameFactory = null)
+        private readonly string _documentDbIdField = "Id";
+
+        public DocumentDbRepository(DocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Expression<Func<T, object>> idNameFactory = null)
         {
             _client = client;
             _databaseId = databaseId;
@@ -33,7 +38,10 @@ namespace DocumentDB.Repository
             _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync());
 
             _collectionName = collectionNameFactory != null ? collectionNameFactory() : typeof(T).Name;
-            _idFieldName = idNameFactory != null ? idNameFactory() : "Id";
+
+            _idFieldName = idNameFactory != null && idNameFactory.Body is MemberExpression
+                ? ((MemberExpression) idNameFactory.Body).Member.Name
+                : _documentDbIdField;
         }
 
         public async Task<bool> ClearAsync()
@@ -52,7 +60,7 @@ namespace DocumentDB.Repository
             bool isSuccess = false;
 
             var doc = await GetDocumentByIdAsync(id);
-            
+
             if (doc != null)
             {
                 var result = await _client.DeleteDocumentAsync(doc.SelfLink);
@@ -66,10 +74,23 @@ namespace DocumentDB.Repository
         public async Task<T> AddOrUpdateAsync(T entity)
         {
             T upsertedEntity;
-            Document doc = await GetDocumentByIdAsync(GetId(entity));
 
-            if (doc != null)
+            // check if entity exist
+            T existingEntity = await GetByIdAsync(GetId(entity));
+
+            if (existingEntity != null)
             {
+                // get doc
+                Document doc = await GetDocumentByIdAsync(GetId(existingEntity, _documentDbIdField));
+
+                // update Id field if it doesn't exist
+                var entityId = GetId(entity, _documentDbIdField);
+
+                if (string.IsNullOrEmpty(entityId))
+                {
+                    SetValue(_documentDbIdField, entity, GetId(existingEntity, _documentDbIdField));
+                }
+
                 var updatedDoc = await _client.ReplaceDocumentAsync(doc.SelfLink, entity);
                 upsertedEntity = JsonConvert.DeserializeObject<T>(updatedDoc.Resource.ToString());
             }
@@ -83,9 +104,9 @@ namespace DocumentDB.Repository
             return upsertedEntity;
         }
 
-        public async Task<int> CountAsync()
+        public async Task<long> CountAsync()
         {
-            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).AsEnumerable().Count();
+            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).AsEnumerable().LongCount();
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
@@ -98,7 +119,7 @@ namespace DocumentDB.Repository
             return await FirstOrDefaultAsync(d => GetId(d) == id);
         }
 
-        public async Task<T> FirstOrDefaultAsync(Func<T,bool> predicate)
+        public async Task<T> FirstOrDefaultAsync(Func<T, bool> predicate)
         {
             return
                 _client.CreateDocumentQuery<T>((await _collection).DocumentsLink)
@@ -109,7 +130,8 @@ namespace DocumentDB.Repository
 
         public async Task<IQueryable<T>> WhereAsync(Expression<Func<T, bool>> predicate)
         {
-            return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink).Where(predicate);
+            return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink)
+                .Where(predicate);
         }
 
         public async Task<IQueryable<T>> QueryAsync()
@@ -149,12 +171,19 @@ namespace DocumentDB.Repository
             return database;
         }
 
-        private string GetId(T entity)
+        private string GetId(T entity, string propertyName = null)
         {
             var p = Expression.Parameter(typeof(T), "x");
-            var body = Expression.Property(p, _idFieldName);
+            var body = Expression.Property(p, propertyName ?? _idFieldName);
             var exp = Expression.Lambda<Func<T, string>>(body, p);
             return exp.Compile()(entity);
+        }
+
+        private void SetValue<T, TV>(string propertyName, T item, TV value)
+        {
+            MethodInfo method = typeof(T).GetProperty(propertyName).GetSetMethod();
+            Action<T, TV> setter = (Action<T, TV>)Delegate.CreateDelegate(typeof(Action<T, TV>), method);
+            setter(item, value);
         }
     }
 }

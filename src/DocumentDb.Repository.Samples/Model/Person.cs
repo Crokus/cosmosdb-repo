@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Newtonsoft.Json;
@@ -8,11 +9,14 @@ namespace DocumentDb.Repository.Samples.Model
     public class Person
     {
         [JsonProperty(PropertyName = "id")]
-        public string Id { get; set; }
+        public string FullName {
+            get { return FirstName + " " + LastName; }
+        }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public DateTime BirthDayDateTime { get; set; }
         public Collection<PhoneNumber> PhoneNumbers { get; set; }
+        public Dictionary<string, string> AllThings { get; set; }
 
         public override string ToString()
         {

@@ -33,8 +33,8 @@ namespace DocumentDb.Repository.Samples
         {
             string databaseId = ConfigurationManager.AppSettings["azure.documentdb.databaseId"];
 
-            // create repository for persons
-            DocumentDbRepository<Person> repo = new DocumentDbRepository<Person>(Client, databaseId);
+            // create repository for persons and set Person.FullName property as identity field (overriding default Id property name)
+            DocumentDbRepository<Person> repo = new DocumentDbRepository<Person>(Client, databaseId, null, p => p.FullName);
 
             // output all persons in our database, nothing there yet
             await PrintPersonCollection(repo);
@@ -87,7 +87,7 @@ namespace DocumentDb.Repository.Samples
             await PrintPersonCollection(repo);
 
             // get Matt by his Id
-            Person justMatt = await repo.GetByIdAsync(matt.Id);
+            Person justMatt = await repo.GetByIdAsync(matt.FullName);
             Console.WriteLine("GetByIdAsync result: " + justMatt);
 
             // ... or by his first name
@@ -107,10 +107,10 @@ namespace DocumentDb.Repository.Samples
             }
 
             // remove matt from collection
-            await repo.RemoveAsync(matt.Id);
+            await repo.RemoveAsync(matt.FullName);
 
             // remove jack from collection
-            await repo.RemoveAsync(jack.Id);
+            await repo.RemoveAsync(jack.FullName);
 
             // should output nothing
             await PrintPersonCollection(repo);
