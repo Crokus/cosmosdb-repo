@@ -25,9 +25,9 @@ namespace DocumentDB.Repository
         private AsyncLazy<DocumentCollection> _collection;
 
         private readonly string _collectionName;
-        private readonly string _idFieldName;
 
-        private readonly string _documentDbIdField = "Id";
+        private readonly string _repositoryIdentityProperty = "id";
+        private readonly string _defaultIdentityPropertyName = "id";
 
         public DocumentDbRepository(DocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Expression<Func<T, object>> idNameFactory = null)
         {
@@ -39,12 +39,64 @@ namespace DocumentDB.Repository
 
             _collectionName = collectionNameFactory != null ? collectionNameFactory() : typeof(T).Name;
 
-            _idFieldName = idNameFactory != null && idNameFactory.Body is MemberExpression
-                ? ((MemberExpression) idNameFactory.Body).Member.Name
-                : _documentDbIdField;
+            _repositoryIdentityProperty = TryGetIdProperty(idNameFactory);
         }
 
-        public async Task<bool> ClearAsync()
+        private string TryGetIdProperty(Expression<Func<T, object>> idNameFactory)
+        {
+            Type entityType = typeof (T);            
+            var properties = entityType.GetProperties();
+
+            // search for idNameFactory
+            if (idNameFactory != null && idNameFactory.Body is MemberExpression)
+            {
+                MemberInfo customPropertyInfo = ((MemberExpression) idNameFactory.Body).Member;
+                EnsurePropertyHasJsonAttributeWithCorrectPropertyName(customPropertyInfo);
+
+                return customPropertyInfo.Name;
+            }
+
+            // search for id property in entity
+            var idProperty = properties.SingleOrDefault(p => p.Name == _defaultIdentityPropertyName);
+
+            if (idProperty != null)
+            {
+                return idProperty.Name;
+            }
+
+             // search for Id property in entity
+            idProperty = properties.SingleOrDefault(p => p.Name == "Id");
+
+            if (idProperty != null)
+            {
+                EnsurePropertyHasJsonAttributeWithCorrectPropertyName(idProperty);
+
+                return idProperty.Name;
+            }
+
+            // identity property not found;
+            throw new ArgumentException("Unique identity property not found. Create \"id\" property for your entity or use different property name with JsonAttribute with PropertyName set to \"id\"");
+        }
+
+        private void EnsurePropertyHasJsonAttributeWithCorrectPropertyName(MemberInfo idProperty)
+        {
+            var attributes = idProperty.GetCustomAttributes(typeof (JsonPropertyAttribute), true);
+            if (!(attributes.Length == 1 &&
+                ((JsonPropertyAttribute) attributes[0]).PropertyName == _defaultIdentityPropertyName))
+            {
+                throw new ArgumentException(
+                        string.Format(
+                            "\"{0}\" property needs to be decorated with JsonAttirbute with PropertyName set to \"id\"",
+                            idProperty.Name));
+            }
+        }
+
+        /// <summary>
+        /// Removes the underlying DocumentDB collection. NOTE: Each time you create a collection, you incur a charge for at least one hour of use, as determined by the specified performance level of the collection. 
+        /// If you create a collection and delete it within an hour, you are still charged for one hour of use
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> RemoveAsync()
         {
             var result = await _client.DeleteDocumentCollectionAsync((await _collection).SelfLink);
 
@@ -81,14 +133,14 @@ namespace DocumentDB.Repository
             if (existingEntity != null)
             {
                 // get doc
-                Document doc = await GetDocumentByIdAsync(GetId(existingEntity, _documentDbIdField));
+                Document doc = await GetDocumentByIdAsync(GetId(existingEntity));
 
                 // update Id field if it doesn't exist
-                var entityId = GetId(entity, _documentDbIdField);
+                var entityId = GetId(entity);
 
                 if (string.IsNullOrEmpty(entityId))
                 {
-                    SetValue(_documentDbIdField, entity, GetId(existingEntity, _documentDbIdField));
+                    SetValue(_repositoryIdentityProperty, entity, GetId(existingEntity));
                 }
 
                 var updatedDoc = await _client.ReplaceDocumentAsync(doc.SelfLink, entity);
@@ -171,10 +223,10 @@ namespace DocumentDB.Repository
             return database;
         }
 
-        private string GetId(T entity, string propertyName = null)
+        private string GetId(T entity)
         {
             var p = Expression.Parameter(typeof(T), "x");
-            var body = Expression.Property(p, propertyName ?? _idFieldName);
+            var body = Expression.Property(p, _repositoryIdentityProperty);
             var exp = Expression.Lambda<Func<T, string>>(body, p);
             return exp.Compile()(entity);
         }

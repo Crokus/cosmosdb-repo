@@ -35,7 +35,7 @@ namespace DocumentDb.Repository.Samples
 
             // create repository for persons and set Person.FullName property as identity field (overriding default Id property name)
             DocumentDbRepository<Person> repo = new DocumentDbRepository<Person>(Client, databaseId, null, p => p.FullName);
-
+            await repo.RemoveAsync();
             // output all persons in our database, nothing there yet
             await PrintPersonCollection(repo);
 
@@ -71,11 +71,8 @@ namespace DocumentDb.Repository.Samples
             // should output person and his two phone numbers
             await PrintPersonCollection(repo);
 
-            // update first name
-            matt.FirstName = "Matt";
-
-            // add last name
-            matt.LastName = "Smith";
+            // change birth date
+            matt.BirthDayDateTime -= new TimeSpan(500, 0, 0, 0);
 
             // remove landline phone number
             matt.PhoneNumbers.RemoveAt(1);
