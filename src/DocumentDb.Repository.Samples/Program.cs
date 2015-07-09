@@ -35,7 +35,7 @@ namespace DocumentDb.Repository.Samples
 
             // create repository for persons and set Person.FullName property as identity field (overriding default Id property name)
             DocumentDbRepository<Person> repo = new DocumentDbRepository<Person>(Client, databaseId, null, p => p.FullName);
-            await repo.RemoveAsync();
+            
             // output all persons in our database, nothing there yet
             await PrintPersonCollection(repo);
 
@@ -96,8 +96,8 @@ namespace DocumentDb.Repository.Samples
             Console.WriteLine(smiths.Count);
 
             // use IQueryable, as for now supported expressions are 'Queryable.Where', 'Queryable.Select' & 'Queryable.SelectMany'
-            var allSmithsPhones = (await repo.QueryAsync()).SelectMany(p => p.PhoneNumbers).Select(p => p.Type);
-
+            var allSmithsPhones =
+                (await repo.QueryAsync()).SelectMany(p => p.PhoneNumbers).Select(p => p.Type);
             foreach (var phone in allSmithsPhones)
             {
                 Console.WriteLine(phone);
@@ -111,6 +111,9 @@ namespace DocumentDb.Repository.Samples
 
             // should output nothing
             await PrintPersonCollection(repo);
+
+            // remove collection
+            await repo.RemoveAsync();
         }
 
         private static async Task PrintPersonCollection(DocumentDbRepository<Person> repo)
