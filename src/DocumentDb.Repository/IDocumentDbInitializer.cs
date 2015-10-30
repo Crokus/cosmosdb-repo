@@ -4,6 +4,6 @@ namespace DocumentDB.Repository
 {
     public interface IDocumentDbInitializer
     {
-        DocumentClient GetClient(string endpointUrl, string authorizationKey);
+        DocumentClient GetClient(string endpointUrl, string authorizationKey, ConnectionPolicy connectionPolicy = null);
     }
 }
