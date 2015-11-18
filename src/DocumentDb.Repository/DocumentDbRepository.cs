@@ -40,7 +40,7 @@ namespace DocumentDB.Repository
             _collectionName = collectionNameFactory != null ? collectionNameFactory() : typeof(T).Name;
 
             _repositoryIdentityProperty = TryGetIdProperty(idNameFactory);
-        }  
+        }
 
         /// <summary>
         /// Removes the underlying DocumentDB collection. NOTE: Each time you create a collection, you incur a charge for at least one hour of use, as determined by the specified performance level of the collection. 
@@ -78,31 +78,8 @@ namespace DocumentDB.Repository
         {
             T upsertedEntity;
 
-            var entityId = GetId(entity);
-
-            // check if entity exist
-            T existingEntity = await GetByIdAsync(entityId);
-
-            if (existingEntity != null)
-            {
-                // get doc
-                Document doc = await GetDocumentByIdAsync(GetId(existingEntity));
-
-                // update Id field if it doesn't exist
-                if (entityId == null)
-                {
-                    SetValue(_repositoryIdentityProperty, entity, GetId(existingEntity));
-                }
-
-                var updatedDoc = await _client.ReplaceDocumentAsync(doc.SelfLink, entity);
-                upsertedEntity = JsonConvert.DeserializeObject<T>(updatedDoc.Resource.ToString());
-            }
-            else
-            {
-                var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity);
-
-                upsertedEntity = JsonConvert.DeserializeObject<T>(addedDoc.Resource.ToString());
-            }
+            var upsertedDoc = await _client.UpsertDocumentAsync((await _collection).SelfLink, entity);
+            upsertedEntity = JsonConvert.DeserializeObject<T>(upsertedDoc.Resource.ToString());
 
             return upsertedEntity;
         }
