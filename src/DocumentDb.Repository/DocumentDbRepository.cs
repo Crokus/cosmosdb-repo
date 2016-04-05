@@ -94,9 +94,10 @@ namespace DocumentDB.Repository
             return _client.CreateDocumentQuery<T>((await _collection).SelfLink).AsEnumerable();
         }
 
-        public async Task<T> GetByIdAsync(object id)
+        public async Task<T> GetByIdAsync(string id)
         {
-            return await FirstOrDefaultAsync(d => GetId(d).Equals(id));
+            var retVal = await GetDocumentByIdAsync(id);
+            return (T)(dynamic)retVal;
         }
 
         public async Task<T> FirstOrDefaultAsync(Func<T, bool> predicate)
