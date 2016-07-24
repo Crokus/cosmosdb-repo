@@ -1,24 +1,20 @@
-﻿using System;
+﻿using DocumentDb.Repository.Infrastructure;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client.TransientFaultHandling;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using DocumentDb.Repository;
-using DocumentDb.Repository.Infrastructure;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
-using Newtonsoft.Json;
-
 
 namespace DocumentDB.Repository
 {
     public class DocumentDbRepository<T> where T : class
     {
-        private readonly DocumentClient _client;
+        private readonly IReliableReadWriteDocumentClient _client;
         private readonly string _databaseId;
 
         private readonly AsyncLazy<Database> _database;
@@ -29,7 +25,7 @@ namespace DocumentDB.Repository
         private readonly string _repositoryIdentityProperty = "id";
         private readonly string _defaultIdentityPropertyName = "id";
 
-        public DocumentDbRepository(DocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Expression<Func<T, object>> idNameFactory = null)
+        public DocumentDbRepository(IReliableReadWriteDocumentClient client, string databaseId, Func<string> collectionNameFactory = null, Expression<Func<T, object>> idNameFactory = null)
         {
             _client = client;
             _databaseId = databaseId;

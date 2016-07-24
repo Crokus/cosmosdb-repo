@@ -6,13 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using DocumentDB.Repository;
 using DocumentDb.Repository.Samples.Model;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Client.TransientFaultHandling;
 
 namespace DocumentDb.Repository.Samples
 {
     internal class Program
     {
-        public static DocumentClient Client { get; set; }
+        public static IReliableReadWriteDocumentClient Client { get; set; }
 
         private static void Main(string[] args)
         {
