@@ -9,7 +9,7 @@ Before you can play with your DocumentDB database you need to get the DocumentDB
 ```csharp
 internal class Program
 {
-    public static DocumentClient Client { get; set; }
+    public static IReliableReadWriteDocumentClient Client { get; set; }
 
 	private static void Main(string[] args)
 	{
