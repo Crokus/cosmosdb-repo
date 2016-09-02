@@ -100,3 +100,7 @@ private static async Task MainAsync(string[] args)
 ```
 
 Full example can be found [here](https://github.com/Crokus/documentdb-repo/blob/master/src/DocumentDb.Repository.Samples/Program.cs).
+
+# License
+
+documentdb-repo is provided under the MIT license.
