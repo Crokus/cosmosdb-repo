@@ -2,6 +2,12 @@ Simple repository pattern with DocumentDB
 
 [NuGet Package](https://www.nuget.org/packages/DocumentDB.Repository/1.0.0)
 
+# Installation
+
+```
+PM> Install-Package DocumentDB.Repository
+```
+
 # Getting started
 
 ## Step 1: Get DocumentDB client
