@@ -2,7 +2,7 @@ Simple repository pattern for [DocumentDB](https://azure.microsoft.com/en-us/ser
 
 # Installation
 
-Use NuGet to install the [package](https://www.nuget.org/packages/DocumentDB.Repository/1.0.0).
+Use NuGet to install the [package](https://www.nuget.org/packages/DocumentDB.Repository/1.1.0).
 
 ```
 PM> Install-Package DocumentDB.Repository
