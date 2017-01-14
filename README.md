@@ -1,5 +1,3 @@
-# documentdb-repo
-
 Simple repository pattern for [DocumentDB](https://azure.microsoft.com/en-us/services/documentdb/)
 
 [![Nuget](https://img.shields.io/badge/nuget-1.1.0-blue.svg?maxAge=3600)](https://www.nuget.org/packages/DocumentDB.Repository/1.1.0)
