@@ -1,5 +1,6 @@
 ﻿using DocumentDb.Repository.Infrastructure;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Client.TransientFaultHandling;
 using Newtonsoft.Json;
 using System;
@@ -43,9 +44,9 @@ namespace DocumentDB.Repository
         /// If you create a collection and delete it within an hour, you are still charged for one hour of use
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> RemoveAsync()
+        public async Task<bool> RemoveAsync(RequestOptions requestOptions = null)
         {
-            var result = await _client.DeleteDocumentCollectionAsync((await _collection).SelfLink);
+            var result = await _client.DeleteDocumentCollectionAsync((await _collection).SelfLink, requestOptions);
 
             bool isSuccess = result.StatusCode == HttpStatusCode.NoContent;
 
@@ -54,7 +55,7 @@ namespace DocumentDB.Repository
             return isSuccess;
         }
 
-        public async Task<bool> RemoveAsync(string id)
+        public async Task<bool> RemoveAsync(string id, RequestOptions requestOptions = null)
         {
             bool isSuccess = false;
 
@@ -62,7 +63,7 @@ namespace DocumentDB.Repository
 
             if (doc != null)
             {
-                var result = await _client.DeleteDocumentAsync(doc.SelfLink);
+                var result = await _client.DeleteDocumentAsync(doc.SelfLink, requestOptions);
 
                 isSuccess = result.StatusCode == HttpStatusCode.NoContent;
             }
@@ -70,11 +71,11 @@ namespace DocumentDB.Repository
             return isSuccess;
         }
 
-        public async Task<T> AddOrUpdateAsync(T entity)
+        public async Task<T> AddOrUpdateAsync(T entity, RequestOptions requestOptions = null)
         {
             T upsertedEntity;
 
-            var upsertedDoc = await _client.UpsertDocumentAsync((await _collection).SelfLink, entity);
+            var upsertedDoc = await _client.UpsertDocumentAsync((await _collection).SelfLink, entity, requestOptions);
             upsertedEntity = JsonConvert.DeserializeObject<T>(upsertedDoc.Resource.ToString());
 
             return upsertedEntity;
