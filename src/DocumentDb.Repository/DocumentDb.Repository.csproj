@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IDocumentDbRepository.cs" />
     <Compile Include="Infrastructure\AsyncLazy.cs" />
     <Compile Include="DocumentDbRepository.cs" />
     <Compile Include="DocumentDbInitializer.cs" />

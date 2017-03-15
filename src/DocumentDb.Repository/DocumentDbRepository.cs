@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace DocumentDB.Repository
 {
-    public class DocumentDbRepository<T> where T : class
+    public class DocumentDbRepository<T> : IDocumentDbRepository<T> where T : class
     {
         private readonly IReliableReadWriteDocumentClient _client;
         private readonly string _databaseId;
