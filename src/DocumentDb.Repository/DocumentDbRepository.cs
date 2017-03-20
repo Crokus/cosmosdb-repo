@@ -81,9 +81,14 @@ namespace DocumentDB.Repository
             return upsertedEntity;
         }
 
-        public async Task<long> CountAsync()
+        public async Task<int> CountAsync()
         {
-            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).AsEnumerable().LongCount();
+            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).Count();
+        }
+
+        public async Task<int> CountAsync(Expression<Func<T, bool>> predicate)
+        {
+            return _client.CreateDocumentQuery<T>((await _collection).SelfLink).Where(predicate).Count();
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()

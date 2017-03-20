@@ -103,6 +103,12 @@ namespace DocumentDb.Repository.Samples
                 Console.WriteLine(phone);
             }
 
+            // count all persons
+            var personsCount = await repo.CountAsync();
+
+            // count all jacks
+            var jacksCount = await repo.CountAsync(p => p.FirstName == "Jack");
+
             // remove matt from collection
             await repo.RemoveAsync(matt.FullName);
 
@@ -111,7 +117,7 @@ namespace DocumentDb.Repository.Samples
 
             // should output nothing
             await PrintPersonCollection(repo);
-
+            
             // remove collection
             await repo.RemoveAsync();
         }
