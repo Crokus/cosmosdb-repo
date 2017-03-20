@@ -100,7 +100,13 @@ private static async Task MainAsync(string[] args)
 
 	// query all the smiths
 	var smiths = (await repo.WhereAsync(p => p.LastName.Equals("Smith", StringComparison.OrdinalIgnoreCase))).ToList();
+	
+	// count all persons
+        var personsCount = await repo.CountAsync();
 
+        // count all jacks
+        var jacksCount = await repo.CountAsync(p => p.FirstName == "Jack");
+	
 	// remove matt from collection
 	await repo.RemoveAsync(matt.Id);
 
