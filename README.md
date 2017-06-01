@@ -1,4 +1,4 @@
-Simple repository pattern for [DocumentDB](https://azure.microsoft.com/en-us/services/documentdb/)
+Simple repository pattern for [Cosmos DB](https://azure.microsoft.com/en-us/services/cosmos-db/)
 
 [![Nuget](https://img.shields.io/badge/nuget-1.2.0-blue.svg?maxAge=3600)](https://www.nuget.org/packages/DocumentDB.Repository/1.2.0)
 
@@ -119,4 +119,4 @@ Full example can be found [here](https://github.com/Crokus/documentdb-repo/blob/
 
 # License
 
-documentdb-repo is provided under the MIT license.
+cosmosdb-repo is provided under the MIT license.
